@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: servicedesk-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: servicedesk_production
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - servicedesk-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: servicedesk-backend
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=servicedesk_production
+      - CORS_ORIGINS=https://servicedesk.vapa.es
+      - SECRET_KEY=${SECRET_KEY:-servicedesk-secret-key-change-in-production}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - FRONTEND_URL=https://servicedesk.vapa.es
+    depends_on:
+      - mongodb
+    networks:
+      - servicedesk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-https://api-servicedesk.vapa.es}
+    container_name: servicedesk-frontend
+    restart: unless-stopped
+    ports:
+      - "7001:80"
+    depends_on:
+      - backend
+    networks:
+      - servicedesk-network
+
+networks:
+  servicedesk-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
