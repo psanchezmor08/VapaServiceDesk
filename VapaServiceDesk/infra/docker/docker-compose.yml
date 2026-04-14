@@ -1,0 +1,23 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: vapa_service_desk
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+  backend:
+    image: eclipse-temurin:21
+    working_dir: /app
+    volumes: ["../../backend:/app"]
+    command: sh -c "mvn spring-boot:run"
+    ports: ["8081:8081"]
+    depends_on: [postgres]
+  frontend:
+    image: node:20
+    working_dir: /app
+    volumes: ["../../frontend:/app"]
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports: ["5173:5173"]
+    depends_on: [backend]

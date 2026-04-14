@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: vapa-service-desk
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vapa_service_desk
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH_ISSUER_URI:http://localhost:8080/realms/vapa}
+server:
+  port: 8081
+app:
+  tenant:
+    header: X-Tenant-Slug
+  cors:
+    allowed-origins: http://localhost:5173,https://servicedesk.vapa.es
